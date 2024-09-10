@@ -3,27 +3,38 @@ import User from "@/models/userModel";
 import bcryptjs from 'bcryptjs';
 
 
-export const sendEmail = async({email, emailType, userId}:any) => {
+export const sendEmail = async ({ email, emailType, userId }: any) => {
     try {
         // create a hased token
         const hashedToken = await bcryptjs.hash(userId.toString(), 10)
-
+        console.log("email type", emailType)
         if (emailType === "VERIFY") {
-            await User.findByIdAndUpdate(userId, 
-                {verifyToken: hashedToken, verifyTokenExpiry: Date.now() + 3600000})
-        } else if (emailType === "RESET"){
-            await User.findByIdAndUpdate(userId, 
-                {forgotPasswordToken: hashedToken, forgotPasswordTokenExpiry: Date.now() + 3600000})
+            await User.findByIdAndUpdate(userId,
+                {
+                    $set: {
+                        verifyToken: hashedToken,
+                        verifyTokenExpiry: Date.now() + 3600000
+                    }
+                })
+        } else if (emailType === "RESET") {
+            await User.findByIdAndUpdate(userId,
+                {
+                    $set:
+                    {
+                        forgotPasswordToken: hashedToken,
+                        forgotPasswordTokenExpiry: Date.now() + 3600000
+                    }
+                })
         }
 
         var transport = nodemailer.createTransport({
             host: "sandbox.smtp.mailtrap.io",
             port: 2525,
             auth: {
-              user: "29522cd665c056",
-              pass: "839280e7c7044c"
+                user: "29522cd665c056",
+                pass: "839280e7c7044c"
             }
-          });
+        });
 
 
         const mailOptions = {
@@ -36,10 +47,10 @@ export const sendEmail = async({email, emailType, userId}:any) => {
         }
 
         const mailresponse = await transport.sendMail
-        (mailOptions);
+            (mailOptions);
         return mailresponse;
 
-    } catch (error:any) {
+    } catch (error: any) {
         throw new Error(error.message);
     }
 }
